@@ -63,7 +63,7 @@ class PHPechkin {
 		$params = array_merge($user, $params);
 		$params = http_build_query($params);
 
-		$fileUrl = $this->url.'?method = '.$method.'&'.$params.'&format=json';
+		$fileUrl = $this->apiUrl.'?method='.$method.'&'.$params.'&format=json';
 
 		if ($this->useCURL) {
 			$options = array(
@@ -98,8 +98,10 @@ class PHPechkin {
 	**************** Работа с Адресными Базами ***********************
 	******************************************************************/
 	//lists.get - Получаем список баз пользователя
-	public function lists_get($list_id) {
-		$params = array('list_id' => $list_id);
+	/*
+	optional: list_id
+	*/
+	public function lists_get($params = array()) {
 		return $this->getData('lists.get', $params);
 	}
 
@@ -262,14 +264,7 @@ class PHPechkin {
 	optional: campaign_id, status, list_id, type
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.get
 	*/
-	public function campaigns_get($campaign_id, $status, $list_id, $type, $params = array()) {
-		$required = array(
-			'campaign_id' => $campaign_id,
-			'status' => $status,
-			'list_id' => $list_id,
-			'type' => $type
-			);
-		$params = array_merge($required, $params);
+	public function campaigns_get($params) {
 		return $this->getData('campaigns.get', $params);
 	}
 
@@ -346,7 +341,7 @@ class PHPechkin {
 	required: campaign_id, id
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.delete_attachments
 	*/
-	public function campaigns_delete_attachments($campaign_id, id, $params) {
+	public function campaigns_delete_attachments($campaign_id, $id, $params) {
 		$required = array('campaign_id' => $campaign_id, 'id' => $id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.delete_attachments', $params);
@@ -387,7 +382,7 @@ class PHPechkin {
 	optional: delay
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.force_auto
 	*/
-	public function campaigns_force_auto($campaign_id, email, $params) {
+	public function campaigns_force_auto($campaign_id, $email, $params) {
 		$required = array('campaign_id' => $campaign_id, 'email' => $email);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.force_auto', $params);
