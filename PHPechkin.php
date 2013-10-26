@@ -14,13 +14,47 @@ class PHPechkin {
 	//pechkin mail api url
 	private $apiUrl = 'https://api.pechkin-mail.ru/';
 
-	//format
-	private $this->format = 'array';
+	//use curl
+	public $useCURL = false;
 
 	//constructor
 	public function __construct($username, $password) {
 		$this->username = $username;
 		$this->password = $password;
+	}
+
+	//get error codes
+	private function getError($key) {
+		$errors = array(
+			'2' => 'Ошибка при добавлении в базу',
+			'3' => 'Заданы не все необходимые параметры',
+			'4' => 'Нет данных при выводе',
+			'5' => 'У пользователя нет адресной базы с таким id',
+			'6' => 'Некорректный email-адрес',
+			'7' => 'Такой пользователь уже есть в этой адресной базе',
+			'8' => 'Лимит по количеству активных подписчиков на тарифном плане клиента',
+			'9' => 'Нет такого подписчика у клиента',
+			'10' => 'Пользователь уже отписан',
+			'11' => 'Нет данных для обновления подписчика',
+			'12' => 'Не заданы элементы списка',
+			'13' => 'Не задано время рассылки',
+			'14' => 'Не задан заголовок письма',
+			'15' => 'Не задано поле От Кого?',
+			'16' => 'Не задан обратный адрес',
+			'17' => 'Не задана ни html ни plain_text версия письма',
+			'18' => 'Нет ссылки отписаться в тексте рассылки. Пример ссылки: отписаться',
+			'19' => 'Нет ссылки отписаться в тексте рассылки',
+			'20' => 'Задан недопустимый статус рассылки',
+			'21' => 'Рассылка уже отправляется',
+			'22' => 'У вас нет кампании с таким campaign_id',
+			'23' => 'Нет такого поля для сортировки',
+			'24' => 'Заданы недопустимые события для авторассылки',
+			'25' => 'Загружаемый файл уже существует',
+			'26' => 'Загружаемый файл больше 5 Мб',
+			'27' => 'Файл не найден',
+			'28' => 'Указанный шаблон не существует',
+		);
+		return $errors[$key];
 	}
 
 	//get data by method
@@ -29,39 +63,34 @@ class PHPechkin {
 		$params = array_merge($user, $params);
 		$params = http_build_query($params);
 
-		$fileUrl = $this->url.'?method = '.$method.'&'.$params.'&format=xml';
+		$fileUrl = $this->url.'?method = '.$method.'&'.$params.'&format=json';
 
-		try {
-			$result = file_get_contents($fileUrl);
-		} catch (Exception $e) {
-			//do something
+		if ($this->useCURL) {
+			$options = array(
+				CURLOPT_URL => $fileUrl,
+				CURLOPT_POST => false,
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_SSL_VERIFYPEER => 1,
+			);
+
+			$curl = curl_init();
+			curl_setopt_array($curl, $options);
+			$result = curl_exec($curl);
+			curl_close($curl);
+		} else {
+			try {
+				$result = file_get_contents($fileUrl);
+			} catch (Exception $e) {
+				//do something
+			}
 		}
 
-		return $result;
-
-	}
-
-	/*
-	* return SimpleXMLObject or array
-	* For work with SimpleXML
-	* see http://www.php.net/manual/en/book.simplexml.php
-	*/
-	private function getArray($result) {
-		switch ($this->format) {
-
-			//return array
-			case 'array':
-				$xml = simplexml_load_string($result);
-				$json = json_encode($xml);
-				$final = json_decode($json, TRUE);
-				break;
-
-			//return SimpleXMLObject
-			case 'object':
-				$final = new SimpleXMLElement($result);
-				break;
+		$final = json_decode($result);
+		if ($final->msg->err_code == '0') {
+			return $final;
+		} else {
+			return $this->getError($final->msg->err_code);
 		}
-		return $final;
 	}
 
 
