@@ -63,7 +63,7 @@ class PHPechkin {
 		$params = array_merge($user, $params);
 		$params = http_build_query($params);
 
-		$fileUrl = $this->apiUrl.'?method='.$method.'&'.$params.'&format=json';
+		$fileUrl = $this->apiUrl.'?method='.$method.'&'.$params.'&format=xml';
 
 		if ($this->useCURL) {
 			$options = array(
@@ -85,11 +85,13 @@ class PHPechkin {
 			}
 		}
 
-		$final = json_decode($result);
-		if ($final->msg->err_code == '0') {
-			return $final;
+		$xml = simplexml_load_string($result);
+		$json = json_encode($xml);
+		$final = json_decode($json, TRUE);
+		if ($final['msg']['err_code'] == '0') {
+			return $final['data'];
 		} else {
-			return $this->getError($final->msg->err_code);
+			return $this->getError($final['msg']['err_code']);
 		}
 	}
 
@@ -101,7 +103,8 @@ class PHPechkin {
 	/*
 	optional: list_id
 	*/
-	public function lists_get($params = array()) {
+	public function lists_get($list_id) {
+		$params = array('list_id' => $list_id);
 		return $this->getData('lists.get', $params);
 	}
 
@@ -111,7 +114,7 @@ class PHPechkin {
 	optional: abuse_email, abuse_name, company...
 	http://pechkin-mail.ru/?page=api_details&method=lists.add
 	*/
-	public function lists_add($name, $params) {
+	public function lists_add($name, $params = array()) {
 		$required = array('name' => $name);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.add', $params);
@@ -123,13 +126,16 @@ class PHPechkin {
 	optional: name, abuse_email, abuse_name, company...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update
 	*/
-	public function lists_update($list_id, $params) {
+	public function lists_update($list_id, $params = array()) {
 		$list_id = array('list_id' => $list_id);
 		$params = array_merge($list_id, $params);
 		return $this->getData('lists.update', $params);
 	}
 
 	//lists.delete - Удаляем адресную базу и всех активных подписчиков в ней.
+	/*
+	required: list_id
+	*/
 	public function lists_delete($list_id) {
 		$params = array('list_id' => $list_id);
 		return $this->getData('lists.delete', $params);
@@ -141,7 +147,7 @@ class PHPechkin {
 	optional: state, start, limit...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.get_members
 	*/
-	public function lists_get_members($list_id, $params) {
+	public function lists_get_members($list_id, $params = array()) {
 		$required = array('list_id' => $list_id);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.get_members', $params);
@@ -153,7 +159,7 @@ class PHPechkin {
 	optional: merge_1, merge_2, type, update...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.upload
 	*/
-	public function lists_upload($list_id, $file, $email, $params) {
+	public function lists_upload($list_id, $file, $email, $params = array()) {
 		$required = array('list_id' => $list_id, 'file' => $file, 'email' => $email);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.upload', $params);
@@ -165,7 +171,7 @@ class PHPechkin {
 	optional: merge_1, merge_2..., update...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.add_member
 	*/
-	public function lists_add_member($list_id, $email, $params) {
+	public function lists_add_member($list_id, $email, $params = array()) {
 		$required = array('list_id' => $list_id, 'email' => $email);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.add_member', $params);
@@ -177,13 +183,16 @@ class PHPechkin {
 	optional: merge_1, merge_2...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update_member
 	*/
-	public function lists_update_member($member_id, $params) {
+	public function lists_update_member($member_id, $params = array()) {
 		$required = array('member_id' => $member_id);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.update_member', $params);
 	}
 
 	//lists.delete_member - Удаляем подписчика из базы
+	/*
+	required: member_id
+	*/
 	public function lists_delete_member($member_id) {
 		$params = array('member_id' => $member_id);
 		return $this->getData('lists.delete_member', $params);
@@ -195,8 +204,6 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.unsubscribe_member
 	*/
 	public function lists_unsubscribe_member($params = array()) {
-		$required = array('member_id' => $member_id, 'email' => $email, 'list_id' => $list_id);
-		$params = array_merge($required, $params);
 		return $this->getData('lists.unsubscribe_member', $params);
 	}
 
@@ -204,9 +211,8 @@ class PHPechkin {
 	/*
 	required: member_id, list_id
 	*/
-	public function lists_move_member($member_id, $list_id, $params) {
-		$required = array('member_id' => $member_id, 'list_id' => $list_id);
-		$params = array_merge($required, $params);
+	public function lists_move_member($member_id, $list_id) {
+		$params = array('member_id' => $member_id, 'list_id' => $list_id);
 		return $this->getData('lists.move_member', $params);
 	}
 
@@ -214,9 +220,8 @@ class PHPechkin {
 	/*
 	required: member_id, list_id
 	*/
-	public function lists_copy_member($params) {
-		$required = array('member_id' => $member_id, 'list_id' => $list_id);
-		$params = array_merge($required, $params);
+	public function lists_copy_member($member_id, $list_id) {
+		$params = array('member_id' => $member_id, 'list_id' => $list_id);
 		return $this->getData('lists.copy_member', $params);
 	}
 
@@ -226,7 +231,7 @@ class PHPechkin {
 	optional: choises, title, ...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.add_merge
 	*/
-	public function lists_add_merge($list_id, $type, $params) {
+	public function lists_add_merge($list_id, $type, $params = array()) {
 		$required = array('list_id' => $list_id, 'type' => $type);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.add_merge', $params);
@@ -238,7 +243,7 @@ class PHPechkin {
 	optional: choisesm title, ...
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update_merge
 	*/
-	public function lists_update_merge($list_id, $merge_id, $params) {
+	public function lists_update_merge($list_id, $merge_id, $params = array()) {
 		$required = array('list_id' => $list_id, 'merge_id' => $merge_id);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.update_merge', $params);
@@ -249,9 +254,8 @@ class PHPechkin {
 	required: list_id, merge_id
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.delete_merge
 	*/
-	public function lists_delete_merge($params) {
-		$required = array('list_id' => $list_id, 'merge_id' => $merge_id);
-		$params = array_merge($required, $params);
+	public function lists_delete_merge($list_id, $merge_id) {
+		$params = array('list_id' => $list_id, 'merge_id' => $merge_id);
 		return $this->getData('lists.delete_merge', $params);
 	}
 
@@ -264,7 +268,7 @@ class PHPechkin {
 	optional: campaign_id, status, list_id, type
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.get
 	*/
-	public function campaigns_get($params) {
+	public function campaigns_get($params = array()) {
 		return $this->getData('campaigns.get', $params);
 	}
 
@@ -274,7 +278,7 @@ class PHPechkin {
 	optional: name. subject, ...
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.create
 	*/
-	public function campaigns_create($list_id, $params) {
+	public function campaigns_create($list_id, $params = array()) {
 		$required = array('list_id' => $list_id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.create', $params);
@@ -295,7 +299,7 @@ class PHPechkin {
 	optional: list_id, name, subject, ...
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.update
 	*/
-	public function campaigns_update($campaign_id, $params) {
+	public function campaigns_update($campaign_id, $params = array()) {
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.update', $params);
@@ -307,7 +311,7 @@ class PHPechkin {
 	optional: list_id, name, subject, ...
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.update_auto
 	*/
-	public function campaigns_update_auto($campaign_id, $params) {
+	public function campaigns_update_auto($campaign_id, $params = array()) {
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.update_auto', $params);
@@ -319,7 +323,7 @@ class PHPechkin {
 	optional: name
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.attach
 	*/
-	public function campaigns_attach($campaign_id, $url, $params) {
+	public function campaigns_attach($campaign_id, $url, $params = array()) {
 		$required = array('campaign_id' => $campaign_id, 'url' => $url);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.attach', $params);
@@ -330,7 +334,7 @@ class PHPechkin {
 	required: campaign_id
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.get_attachments
 	*/
-	public function campaigns_get_attachments($campaign_id, $params) {
+	public function campaigns_get_attachments($campaign_id, $params = array()) {
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.get_attachments', $params);
@@ -341,7 +345,7 @@ class PHPechkin {
 	required: campaign_id, id
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.delete_attachments
 	*/
-	public function campaigns_delete_attachments($campaign_id, $id, $params) {
+	public function campaigns_delete_attachments($campaign_id, $id, $params = array()) {
 		$required = array('campaign_id' => $campaign_id, 'id' => $id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.delete_attachments', $params);
@@ -362,8 +366,7 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.add_template
 	*/
 	public function campaigns_add_template($name, $template) {
-		$required = array('name' => $name, 'template' => $template);
-		$params = array_merge($required, $params);
+		$params = array('name' => $name, 'template' => $template);
 		return $this->getData('campaigns.add_templates', $params);
 	}
 
