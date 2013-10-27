@@ -14,6 +14,9 @@ class PHPechkin {
 	//pechkin mail api url
 	private $apiUrl = 'https://api.pechkin-mail.ru/';
 
+	//check email
+	private $checkUrl = 'http://pechkinfix.ru/check.php';
+
 	//use curl
 	public $useCURL = false;
 
@@ -95,6 +98,21 @@ class PHPechkin {
 		}
 	}
 
+	//check email address
+	public function checkEmail($email) {
+		$checking = $this->checkUrl.'?email='.$email.'&format=xml';
+		$result = file_get_contents($checking);
+		$xml = simplexml_load_string($result);
+		$json = json_encode($xml);
+		$final = json_decode($json, TRUE);
+		$err = $final['err_code'];
+		if ($err == '0' || $err == '1') {
+			return $final['text'];
+		} else {
+			return false;
+		}
+	}
+
 
 	/*****************************************************************
 	**************** Работа с Адресными Базами ***********************
@@ -116,6 +134,13 @@ class PHPechkin {
 	*/
 	public function lists_add($name, $params = array()) {
 		$required = array('name' => $name);
+		if (isset($params['abuse_email'])) {
+			$email = $this->checkEmail($params['abuse_email']);
+			if ($email !== false)
+				$params['abuse_email'] = $email;
+			else
+				return $this->getError('6');
+		}
 		$params = array_merge($required, $params);
 		return $this->getData('lists.add', $params);
 	}
@@ -128,6 +153,13 @@ class PHPechkin {
 	*/
 	public function lists_update($list_id, $params = array()) {
 		$list_id = array('list_id' => $list_id);
+		if (isset($params['abuse_email'])) {
+			$email = $this->checkEmail($params['abuse_email']);
+			if ($email !== false)
+				$params['abuse_email'] = $email;
+			else
+				return $this->getError('6');
+		}
 		$params = array_merge($list_id, $params);
 		return $this->getData('lists.update', $params);
 	}
@@ -160,7 +192,11 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.upload
 	*/
 	public function lists_upload($list_id, $file, $email, $params = array()) {
-		$required = array('list_id' => $list_id, 'file' => $file, 'email' => $email);
+		$email = $this->checkEmail($email);
+		if ($email !== false)
+			$required = array('list_id' => $list_id, 'file' => $file, 'email' => $email);
+		else
+			return $this->getError('6');
 		$params = array_merge($required, $params);
 		return $this->getData('lists.upload', $params);
 	}
@@ -172,7 +208,11 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.add_member
 	*/
 	public function lists_add_member($list_id, $email, $params = array()) {
-		$required = array('list_id' => $list_id, 'email' => $email);
+		$email = $this->checkEmail($email);
+		if ($email !== false)
+			$required = array('list_id' => $list_id, 'email' => $email);
+		else
+			return $this->getError('6');
 		$params = array_merge($required, $params);
 		return $this->getData('lists.add_member', $params);
 	}
@@ -204,6 +244,13 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.unsubscribe_member
 	*/
 	public function lists_unsubscribe_member($params = array()) {
+		if (isset($params['email'])) {
+			$email = $this->checkEmail($params['email']);
+			if ($email !== false)
+				$params['email'] = $email;
+			else
+				return $this->getError('6');
+		}
 		return $this->getData('lists.unsubscribe_member', $params);
 	}
 
@@ -390,7 +437,11 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.force_auto
 	*/
 	public function campaigns_force_auto($campaign_id, $email, $params) {
-		$required = array('campaign_id' => $campaign_id, 'email' => $email);
+		$email = $this->checkEmail($email);
+		if ($email !== false)
+			$required = array('campaign_id' => $campaign_id, 'email' => $email);
+		else
+			return $this->getError('6');
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.force_auto', $params);
 	}
