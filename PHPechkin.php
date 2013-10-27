@@ -279,6 +279,7 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.create
 	*/
 	public function campaigns_create($list_id, $params = array()) {
+		$list_id = serialize($list_id);
 		$required = array('list_id' => $list_id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.create', $params);
@@ -290,6 +291,7 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.create_auto
 	*/
 	public function campaigns_create_auto($params = array()) {
+		$params['list_id'] = serialize($params['list_id']);
 		return $this->getData('campaigns.create_auto', $params);
 	}
 
@@ -301,6 +303,7 @@ class PHPechkin {
 	*/
 	public function campaigns_update($campaign_id, $params = array()) {
 		$required = array('campaign_id' => $campaign_id);
+		$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.update', $params);
 	}
@@ -313,6 +316,7 @@ class PHPechkin {
 	*/
 	public function campaigns_update_auto($campaign_id, $params = array()) {
 		$required = array('campaign_id' => $campaign_id);
+		$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.update_auto', $params);
 	}
