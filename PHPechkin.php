@@ -121,8 +121,11 @@ class PHPechkin {
 	/*
 	optional: list_id
 	*/
-	public function lists_get($list_id) {
-		$params = array('list_id' => $list_id);
+	public function lists_get($list_id = '') {
+		if (!empty($list_id))
+			$params = array('list_id' => $list_id);
+		else
+			$params = array();
 		return $this->getData('lists.get', $params);
 	}
 
