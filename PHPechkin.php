@@ -368,6 +368,16 @@ class PHPechkin {
 		return $this->getData('campaigns.update_auto', $params);
 	}
 
+	//campaigns.delete - Удаляем рассылку
+	/*
+	required: campaign_id
+	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.delete
+	*/
+	public function campaigns_delete($campaign_id) {
+		$params = array('campaign_id' => $campaign_id);
+		return $this->getData('campaigns.delete', $params);
+	}
+
 	//campaigns.attach - Прикрепляем файл
 	/*
 	required: campaign_id, url
