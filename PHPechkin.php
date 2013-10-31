@@ -136,7 +136,10 @@ class PHPechkin {
 	http://pechkin-mail.ru/?page=api_details&method=lists.add
 	*/
 	public function lists_add($name, $params = array()) {
-		$required = array('name' => $name);
+		if (!is_null($name))
+			$required = array('name' => $name);
+		else
+			return $this->getError('3');
 		if (isset($params['abuse_email'])) {
 			$email = $this->checkEmail($params['abuse_email']);
 			if ($email !== false)
@@ -155,7 +158,10 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update
 	*/
 	public function lists_update($list_id, $params = array()) {
-		$list_id = array('list_id' => $list_id);
+		if (!is_null($name))
+			$list_id = array('list_id' => $list_id);
+		else
+			return $this->getError('3');
 		if (isset($params['abuse_email'])) {
 			$email = $this->checkEmail($params['abuse_email']);
 			if ($email !== false)
@@ -172,7 +178,10 @@ class PHPechkin {
 	required: list_id
 	*/
 	public function lists_delete($list_id) {
-		$params = array('list_id' => $list_id);
+		if (!is_null($name))
+			$params = array('list_id' => $list_id);
+		else
+			return $this->getError('3');
 		return $this->getData('lists.delete', $params);
 	}
 
@@ -183,7 +192,10 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.get_members
 	*/
 	public function lists_get_members($list_id, $params = array()) {
-		$required = array('list_id' => $list_id);
+		if (!is_null($name))
+			$required = array('list_id' => $list_id);
+		else
+			return $this->getError('3');
 		$params = array_merge($required, $params);
 		return $this->getData('lists.get_members', $params);
 	}
@@ -195,6 +207,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.upload
 	*/
 	public function lists_upload($list_id, $file, $email, $params = array()) {
+		if (is_null($list_id) || is_null($email) || is_null($file))
+			return $this->getError('3');
 		$email = $this->checkEmail($email);
 		if ($email !== false)
 			$required = array('list_id' => $list_id, 'file' => $file, 'email' => $email);
@@ -211,6 +225,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.add_member
 	*/
 	public function lists_add_member($list_id, $email, $params = array()) {
+		if (is_null($list_id) || is_null($email))
+			return $this->getError('3');
 		$email = $this->checkEmail($email);
 		if ($email !== false)
 			$required = array('list_id' => $list_id, 'email' => $email);
@@ -227,7 +243,10 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update_member
 	*/
 	public function lists_update_member($member_id, $params = array()) {
-		$required = array('member_id' => $member_id);
+		if (!is_null($member_id))
+			$required = array('member_id' => $member_id);
+		else
+			return $this->getError('3');
 		$params = array_merge($required, $params);
 		return $this->getData('lists.update_member', $params);
 	}
@@ -237,7 +256,10 @@ class PHPechkin {
 	required: member_id
 	*/
 	public function lists_delete_member($member_id) {
-		$params = array('member_id' => $member_id);
+		if (!is_null($member_id))
+			$params = array('member_id' => $member_id);
+		else
+			return $this->getError('3');
 		return $this->getData('lists.delete_member', $params);
 	}
 
@@ -262,6 +284,8 @@ class PHPechkin {
 	required: member_id, list_id
 	*/
 	public function lists_move_member($member_id, $list_id) {
+		if (is_null($member_id) || is_null($list_id))
+			return $this->getError('3');
 		$params = array('member_id' => $member_id, 'list_id' => $list_id);
 		return $this->getData('lists.move_member', $params);
 	}
@@ -271,6 +295,8 @@ class PHPechkin {
 	required: member_id, list_id
 	*/
 	public function lists_copy_member($member_id, $list_id) {
+		if (is_null($member_id) || is_null($list_id))
+			return $this->getError('3');
 		$params = array('member_id' => $member_id, 'list_id' => $list_id);
 		return $this->getData('lists.copy_member', $params);
 	}
@@ -282,6 +308,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.add_merge
 	*/
 	public function lists_add_merge($list_id, $type, $params = array()) {
+		if (is_null($list_id) || is_null($type))
+			return $this->getError('3');
 		$required = array('list_id' => $list_id, 'type' => $type);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.add_merge', $params);
@@ -294,6 +322,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update_merge
 	*/
 	public function lists_update_merge($list_id, $merge_id, $params = array()) {
+		if (is_null($merge_id) || is_null($list_id))
+			return $this->getError('3');
 		$required = array('list_id' => $list_id, 'merge_id' => $merge_id);
 		$params = array_merge($required, $params);
 		return $this->getData('lists.update_merge', $params);
@@ -305,6 +335,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.delete_merge
 	*/
 	public function lists_delete_merge($list_id, $merge_id) {
+		if (is_null($merge_id) || is_null($list_id))
+			return $this->getError('3');
 		$params = array('list_id' => $list_id, 'merge_id' => $merge_id);
 		return $this->getData('lists.delete_merge', $params);
 	}
@@ -329,6 +361,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.create
 	*/
 	public function campaigns_create($list_id, $params = array()) {
+		if (is_null($list_id))
+			return $this->getError('3');
 		$list_id = serialize($list_id);
 		$required = array('list_id' => $list_id);
 		$params = array_merge($required, $params);
@@ -352,6 +386,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.update
 	*/
 	public function campaigns_update($campaign_id, $params = array()) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
@@ -365,6 +401,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.update_auto
 	*/
 	public function campaigns_update_auto($campaign_id, $params = array()) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
@@ -377,6 +415,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.delete
 	*/
 	public function campaigns_delete($campaign_id) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
 		return $this->getData('campaigns.delete', $params);
 	}
@@ -388,6 +428,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.attach
 	*/
 	public function campaigns_attach($campaign_id, $url, $params = array()) {
+		if (is_null($campaign_id) || is_null($url))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id, 'url' => $url);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.attach', $params);
@@ -399,6 +441,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.get_attachments
 	*/
 	public function campaigns_get_attachments($campaign_id, $params = array()) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.get_attachments', $params);
@@ -410,6 +454,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.delete_attachments
 	*/
 	public function campaigns_delete_attachments($campaign_id, $id, $params = array()) {
+		if (is_null($campaign_id) || is_null($id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id, 'id' => $id);
 		$params = array_merge($required, $params);
 		return $this->getData('campaigns.delete_attachments', $params);
@@ -430,6 +476,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.add_template
 	*/
 	public function campaigns_add_template($name, $template) {
+		if (is_null($name) || is_null($template))
+			return $this->getError('3');
 		$params = array('name' => $name, 'template' => $template);
 		return $this->getData('campaigns.add_templates', $params);
 	}
@@ -439,6 +487,8 @@ class PHPechkin {
 	required: id
 	*/
 	public function campaigns_delete_template($id) {
+		if (is_null($id))
+			return $this->getError('3');
 		$params = array('id' => $id);
 		return $this->getData('campaigns.delete_templates', $params);
 	}
@@ -450,6 +500,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.force_auto
 	*/
 	public function campaigns_force_auto($campaign_id, $email, $params) {
+		if (is_null($campaign_id) || is_null($email))
+			return $this->getError('3');
 		$email = $this->checkEmail($email);
 		if ($email !== false)
 			$required = array('campaign_id' => $campaign_id, 'email' => $email);
@@ -469,6 +521,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.send
 	*/
 	public function reports_sent($campaign_id, $params) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('reports.sent', $params);
@@ -481,6 +535,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.delivered
 	*/
 	public function reports_delivered($campaign_id, $params) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('reports.delivered', $params);
@@ -493,6 +549,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.opened
 	*/
 	public function reports_opened($campaign_id, $params) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('reports.opened', $params);
@@ -505,6 +563,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.unsubscribed
 	*/
 	public function reports_unsubscribed($campaign_id, $params) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('reports.unsubscribed', $params);
@@ -517,6 +577,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.bounced
 	*/
 	public function reports_bounced($campaign_id, $params) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
 		return $this->getData('reports.unsubscribed', $params);
@@ -528,6 +590,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.clickstat
 	*/
 	public function reports_clickstat($campaign_id) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
 		return $this->getData('reports.clickstat', $params);
 	}
@@ -538,6 +602,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.bouncestat
 	*/
 	public function reports_bouncestat($campaign_id) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
 		return $this->getData('reports.bouncestat', $params);
 	}
@@ -548,6 +614,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.summary
 	*/
 	public function reports_summary($campaign_id) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
 		return $this->getData('reports.summary', $params);
 	}
@@ -558,6 +626,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.clients
 	*/
 	public function reports_clients($campaign_id) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
 		return $this->getData('reports.clients', $params);
 	}
@@ -568,6 +638,8 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.geo
 	*/
 	public function reports_geo($campaign_id) {
+		if (is_null($campaign_id))
+			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
 		return $this->getData('reports.geo', $params);
 	}
