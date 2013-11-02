@@ -64,6 +64,9 @@ class PHPechkin {
 	public function getData($method, $params = array()) {
 		$user = array('username' => $this->username, 'password' => $this->password);
 		$params = array_merge($user, $params);
+		foreach ($params as $key => $value) {
+			$params[$key] = urlencode($value);
+		}
 		$params = http_build_query($params);
 
 		$fileUrl = $this->apiUrl.'?method='.$method.'&'.$params.'&format=xml';
@@ -71,6 +74,7 @@ class PHPechkin {
 		if ($this->useCURL) {
 			$options = array(
 				CURLOPT_URL => $fileUrl,
+				CURLOPT_HEADER => false,
 				CURLOPT_POST => false,
 				CURLOPT_RETURNTRANSFER => true,
 				CURLOPT_SSL_VERIFYPEER => 1,
@@ -80,11 +84,13 @@ class PHPechkin {
 			curl_setopt_array($curl, $options);
 			$result = curl_exec($curl);
 			curl_close($curl);
+			return $result;
 		} else {
 			try {
 				$result = file_get_contents($fileUrl);
 			} catch (Exception $e) {
 				//do something
+				return $e->getMessage();
 			}
 		}
 
@@ -92,6 +98,9 @@ class PHPechkin {
 		$json = json_encode($xml);
 		$final = json_decode($json, TRUE);
 		if ($final['msg']['err_code'] == '0') {
+			foreach ($final['data']['row'] as $key => $value) {
+				$final['data']['row'][$key] = urldecode($final['data']['row'][$key]);
+			}
 			return $final['data'];
 		} else {
 			return $this->getError($final['msg']['err_code']);
@@ -357,11 +366,11 @@ class PHPechkin {
 	//campaigns.create - Создаем рассылку
 	/*
 	required: list_id
-	optional: name. subject, ...
+	optional: name, subject, ...
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.create
 	*/
 	public function campaigns_create($list_id, $params = array()) {
-		if (is_null($list_id))
+		if (!is_array($list_id))
 			return $this->getError('3');
 		$list_id = serialize($list_id);
 		$required = array('list_id' => $list_id);
