@@ -17,9 +17,6 @@ class PHPechkin {
 	//check email
 	private $checkUrl = 'http://pechkinfix.ru/check.php';
 
-	//use curl
-	public $useCURL = false;
-
 	//constructor
 	public function __construct($username, $password) {
 		$this->username = $username;
@@ -64,27 +61,24 @@ class PHPechkin {
 	public function getData($method, $params = array()) {
 		$user = array('username' => $this->username, 'password' => $this->password);
 		$params = array_merge($user, $params);
-		foreach ($params as $key => $value) {
-			$params[$key] = urlencode($value);
-		}
 		$params = http_build_query($params);
 
-		$fileUrl = $this->apiUrl.'?method='.$method.'&'.$params.'&format=xml';
+		$url = $this->apiUrl.'?method='.$method.'&'.$params.'&format=xml';
 
-		try {
-				$result = file_get_contents($fileUrl);
-		} catch (Exception $e) {
-			//do something
-			return $e->getMessage();
-		}
+		$options = array(
+			CURLOPT_URL => $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_SSL_VERIFYPEER => 0,
+		);
+		$ch = curl_init();
+		curl_setopt_array($ch, $options);
+		$result = curl_exec($ch);
+		curl_close($ch);
 
 		$xml = simplexml_load_string($result);
 		$json = json_encode($xml);
 		$final = json_decode($json, TRUE);
 		if ($final['msg']['err_code'] == '0') {
-			foreach ($final['data']['row'] as $key => $value) {
-				$final['data']['row'][$key] = urldecode($final['data']['row'][$key]);
-			}
 			return $final['data'];
 		} else {
 			return $this->getError($final['msg']['err_code']);
