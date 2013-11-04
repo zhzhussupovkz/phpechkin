@@ -71,27 +71,11 @@ class PHPechkin {
 
 		$fileUrl = $this->apiUrl.'?method='.$method.'&'.$params.'&format=xml';
 
-		if ($this->useCURL) {
-			$options = array(
-				CURLOPT_URL => $fileUrl,
-				CURLOPT_HEADER => false,
-				CURLOPT_POST => false,
-				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_SSL_VERIFYPEER => 1,
-			);
-
-			$curl = curl_init();
-			curl_setopt_array($curl, $options);
-			$result = curl_exec($curl);
-			curl_close($curl);
-			return $result;
-		} else {
-			try {
+		try {
 				$result = file_get_contents($fileUrl);
-			} catch (Exception $e) {
-				//do something
-				return $e->getMessage();
-			}
+		} catch (Exception $e) {
+			//do something
+			return $e->getMessage();
 		}
 
 		$xml = simplexml_load_string($result);
@@ -101,6 +85,34 @@ class PHPechkin {
 			foreach ($final['data']['row'] as $key => $value) {
 				$final['data']['row'][$key] = urldecode($final['data']['row'][$key]);
 			}
+			return $final['data'];
+		} else {
+			return $this->getError($final['msg']['err_code']);
+		}
+	}
+
+	//send post data
+	private function sendData($method, $params) {
+
+		$user = array('username' => $this->username, 'password' => $this->password, 'format' => 'xml');
+		$params = array_merge($user, $params);
+
+		$options = array(
+			CURLOPT_URL => $this->apiUrl.'?method='.$method,
+			CURLOPT_POST => true,
+			CURLOPT_POSTFIELDS => $params,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_SSL_VERIFYPEER => 0,
+			);
+
+		$ch = curl_init();
+		curl_setopt_array($ch, $options);
+		$result = curl_exec($ch);
+		curl_close($ch);
+		$xml = simplexml_load_string($result);
+		$json = json_encode($xml);
+		$final = json_decode($json, TRUE);
+		if ($final['msg']['err_code'] == '0') {
 			return $final['data'];
 		} else {
 			return $this->getError($final['msg']['err_code']);
@@ -157,7 +169,7 @@ class PHPechkin {
 				return $this->getError('6');
 		}
 		$params = array_merge($required, $params);
-		return $this->getData('lists.add', $params);
+		return $this->sendData('lists.add', $params);
 	}
 
 	//lists.update - Обновляем контактную информацию адресной базы
@@ -179,7 +191,7 @@ class PHPechkin {
 				return $this->getError('6');
 		}
 		$params = array_merge($list_id, $params);
-		return $this->getData('lists.update', $params);
+		return $this->sendData('lists.update', $params);
 	}
 
 	//lists.delete - Удаляем адресную базу и всех активных подписчиков в ней.
@@ -191,7 +203,7 @@ class PHPechkin {
 			$params = array('list_id' => $list_id);
 		else
 			return $this->getError('3');
-		return $this->getData('lists.delete', $params);
+		return $this->sendData('lists.delete', $params);
 	}
 
 	//lists.get_members - Получаем подписчиков в адресной базе с возможность фильтра и регулировки выдачи.
@@ -224,7 +236,7 @@ class PHPechkin {
 		else
 			return $this->getError('6');
 		$params = array_merge($required, $params);
-		return $this->getData('lists.upload', $params);
+		return $this->sendData('lists.upload', $params);
 	}
 
 	//lists.add_member - Добавляем подписчика в базу
@@ -242,7 +254,7 @@ class PHPechkin {
 		else
 			return $this->getError('6');
 		$params = array_merge($required, $params);
-		return $this->getData('lists.add_member', $params);
+		return $this->sendData('lists.add_member', $params);
 	}
 
 	//lists.update_member - Редактируем подписчика в базе
@@ -257,7 +269,7 @@ class PHPechkin {
 		else
 			return $this->getError('3');
 		$params = array_merge($required, $params);
-		return $this->getData('lists.update_member', $params);
+		return $this->sendData('lists.update_member', $params);
 	}
 
 	//lists.delete_member - Удаляем подписчика из базы
@@ -269,7 +281,7 @@ class PHPechkin {
 			$params = array('member_id' => $member_id);
 		else
 			return $this->getError('3');
-		return $this->getData('lists.delete_member', $params);
+		return $this->sendData('lists.delete_member', $params);
 	}
 
 	//lists.unsubscribe_member - Редактируем подписчика в базе
@@ -285,7 +297,7 @@ class PHPechkin {
 			else
 				return $this->getError('6');
 		}
-		return $this->getData('lists.unsubscribe_member', $params);
+		return $this->sendData('lists.unsubscribe_member', $params);
 	}
 
 	//lists.move_member - Перемещаем подписчика в другую адресную базу.
@@ -296,7 +308,7 @@ class PHPechkin {
 		if (is_null($member_id) || is_null($list_id))
 			return $this->getError('3');
 		$params = array('member_id' => $member_id, 'list_id' => $list_id);
-		return $this->getData('lists.move_member', $params);
+		return $this->sendData('lists.move_member', $params);
 	}
 
 	//lists.copy_member - Копируем подписчика в другую адресную базу
@@ -307,7 +319,7 @@ class PHPechkin {
 		if (is_null($member_id) || is_null($list_id))
 			return $this->getError('3');
 		$params = array('member_id' => $member_id, 'list_id' => $list_id);
-		return $this->getData('lists.copy_member', $params);
+		return $this->sendData('lists.copy_member', $params);
 	}
 
 	//lists.add_merge - Добавить дополнительное поле в адресную базу
@@ -321,7 +333,7 @@ class PHPechkin {
 			return $this->getError('3');
 		$required = array('list_id' => $list_id, 'type' => $type);
 		$params = array_merge($required, $params);
-		return $this->getData('lists.add_merge', $params);
+		return $this->sendData('lists.add_merge', $params);
 	}
 
 	//lists.update_merge - Обновить настройки дополнительного поля в адресной базе
@@ -335,7 +347,7 @@ class PHPechkin {
 			return $this->getError('3');
 		$required = array('list_id' => $list_id, 'merge_id' => $merge_id);
 		$params = array_merge($required, $params);
-		return $this->getData('lists.update_merge', $params);
+		return $this->sendData('lists.update_merge', $params);
 	}
 
 	//lists.delete_merge - Удалить дополнительное поле из адресной базы
@@ -347,7 +359,7 @@ class PHPechkin {
 		if (is_null($merge_id) || is_null($list_id))
 			return $this->getError('3');
 		$params = array('list_id' => $list_id, 'merge_id' => $merge_id);
-		return $this->getData('lists.delete_merge', $params);
+		return $this->sendData('lists.delete_merge', $params);
 	}
 
 
@@ -375,7 +387,7 @@ class PHPechkin {
 		$list_id = serialize($list_id);
 		$required = array('list_id' => $list_id);
 		$params = array_merge($required, $params);
-		return $this->getData('campaigns.create', $params);
+		return $this->sendData('campaigns.create', $params);
 	}
 
 	//campaigns.create_auto - Создаем авторассылку
@@ -385,7 +397,7 @@ class PHPechkin {
 	*/
 	public function campaigns_create_auto($params = array()) {
 		$params['list_id'] = serialize($params['list_id']);
-		return $this->getData('campaigns.create_auto', $params);
+		return $this->sendData('campaigns.create_auto', $params);
 	}
 
 	//campaigns.update - Обновляем параметры рассылки
@@ -400,7 +412,7 @@ class PHPechkin {
 		$required = array('campaign_id' => $campaign_id);
 		$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
-		return $this->getData('campaigns.update', $params);
+		return $this->sendData('campaigns.update', $params);
 	}
 
 	//campaigns.update_auto - Обновляем параметры авторассылки
@@ -415,7 +427,7 @@ class PHPechkin {
 		$required = array('campaign_id' => $campaign_id);
 		$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
-		return $this->getData('campaigns.update_auto', $params);
+		return $this->sendData('campaigns.update_auto', $params);
 	}
 
 	//campaigns.delete - Удаляем рассылку
@@ -427,7 +439,7 @@ class PHPechkin {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$params = array('campaign_id' => $campaign_id);
-		return $this->getData('campaigns.delete', $params);
+		return $this->sendData('campaigns.delete', $params);
 	}
 
 	//campaigns.attach - Прикрепляем файл
@@ -441,7 +453,7 @@ class PHPechkin {
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id, 'url' => $url);
 		$params = array_merge($required, $params);
-		return $this->getData('campaigns.attach', $params);
+		return $this->sendData('campaigns.attach', $params);
 	}
 
 	//campaigns.get_attachments - Получаем приложенные файлы
@@ -467,7 +479,7 @@ class PHPechkin {
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id, 'id' => $id);
 		$params = array_merge($required, $params);
-		return $this->getData('campaigns.delete_attachments', $params);
+		return $this->sendData('campaigns.delete_attachments', $params);
 	}
 
 	//campaigns.get_templates - Получаем html шаблоны
@@ -488,7 +500,7 @@ class PHPechkin {
 		if (is_null($name) || is_null($template))
 			return $this->getError('3');
 		$params = array('name' => $name, 'template' => $template);
-		return $this->getData('campaigns.add_templates', $params);
+		return $this->sendData('campaigns.add_templates', $params);
 	}
 
 	//campaigns.delete_template - Удаляем html шаблон
@@ -499,7 +511,7 @@ class PHPechkin {
 		if (is_null($id))
 			return $this->getError('3');
 		$params = array('id' => $id);
-		return $this->getData('campaigns.delete_templates', $params);
+		return $this->sendData('campaigns.delete_templates', $params);
 	}
 
 	//campaigns.force_auto - Принудительно вызываем срабатывание авторассылки (при этом она должна быть активна)
@@ -508,7 +520,7 @@ class PHPechkin {
 	optional: delay
 	see: http://pechkin-mail.ru/?page=api_details&method=campaigns.force_auto
 	*/
-	public function campaigns_force_auto($campaign_id, $email, $params) {
+	public function campaigns_force_auto($campaign_id, $email, $params = array()) {
 		if (is_null($campaign_id) || is_null($email))
 			return $this->getError('3');
 		$email = $this->checkEmail($email);
@@ -517,7 +529,7 @@ class PHPechkin {
 		else
 			return $this->getError('6');
 		$params = array_merge($required, $params);
-		return $this->getData('campaigns.force_auto', $params);
+		return $this->sendData('campaigns.force_auto', $params);
 	}
 
 	/***************************************************************
@@ -529,12 +541,12 @@ class PHPechkin {
 	optional: start, limit, order
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.send
 	*/
-	public function reports_sent($campaign_id, $params) {
+	public function reports_sent($campaign_id, $params = array()) {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
 		$params = array_merge($required, $params);
-		return $this->getData('reports.sent', $params);
+		return $this->sendData('reports.sent', $params);
 	}
 
 	//reports.delivered - Список доставленных писем в рассылке
@@ -543,7 +555,7 @@ class PHPechkin {
 	optional: start, limit, order
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.delivered
 	*/
-	public function reports_delivered($campaign_id, $params) {
+	public function reports_delivered($campaign_id, $params = array()) {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
@@ -557,7 +569,7 @@ class PHPechkin {
 	optional: start, limit, order
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.opened
 	*/
-	public function reports_opened($campaign_id, $params) {
+	public function reports_opened($campaign_id, $params = array()) {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
@@ -571,7 +583,7 @@ class PHPechkin {
 	optional: start, limit, order
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.unsubscribed
 	*/
-	public function reports_unsubscribed($campaign_id, $params) {
+	public function reports_unsubscribed($campaign_id, $params = array()) {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
@@ -585,7 +597,7 @@ class PHPechkin {
 	optional: start, limit, order
 	see: http://pechkin-mail.ru/?page=api_details&method=reports.bounced
 	*/
-	public function reports_bounced($campaign_id, $params) {
+	public function reports_bounced($campaign_id, $params = array()) {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
