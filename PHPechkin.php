@@ -74,11 +74,15 @@ class PHPechkin {
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);
 		$result = curl_exec($ch);
+		if ($result == false)
+			throw new Exception(curl_error($ch));
 		curl_close($ch);
 
 		$xml = simplexml_load_string($result);
 		$json = json_encode($xml);
 		$final = json_decode($json, TRUE);
+		if (!$final)
+			throw new Exception('Получены неверные данные, пожалуйста, убедитесь, что запрашиваемый метод API существует');
 		if ($final['msg']['err_code'] == '0') {
 			return $final['data'];
 		} else {
@@ -103,10 +107,14 @@ class PHPechkin {
 		$ch = curl_init();
 		curl_setopt_array($ch, $options);
 		$result = curl_exec($ch);
+		if ($result == false)
+			throw new Exception(curl_error($ch));
 		curl_close($ch);
 		$xml = simplexml_load_string($result);
 		$json = json_encode($xml);
 		$final = json_decode($json, TRUE);
+		if (!$final)
+			throw new Exception('Получены неверные данные, пожалуйста, убедитесь, что запрашиваемый метод API существует');
 		if ($final['msg']['err_code'] == '0') {
 			return $final['data'];
 		} else {
@@ -174,7 +182,7 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.update
 	*/
 	public function lists_update($list_id, $params = array()) {
-		if (!is_null($name))
+		if (!is_null($list_id))
 			$list_id = array('list_id' => $list_id);
 		else
 			return $this->getError('3');
@@ -194,7 +202,7 @@ class PHPechkin {
 	required: list_id
 	*/
 	public function lists_delete($list_id) {
-		if (!is_null($name))
+		if (!is_null($list_id))
 			$params = array('list_id' => $list_id);
 		else
 			return $this->getError('3');
@@ -208,7 +216,7 @@ class PHPechkin {
 	see: http://pechkin-mail.ru/?page=api_details&method=lists.get_members
 	*/
 	public function lists_get_members($list_id, $params = array()) {
-		if (!is_null($name))
+		if (!is_null($list_id))
 			$required = array('list_id' => $list_id);
 		else
 			return $this->getError('3');
