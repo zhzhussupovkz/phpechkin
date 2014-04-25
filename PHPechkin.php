@@ -2,7 +2,7 @@
 
 /**
 * @author zhzhussupovkz@gmail.com
-* @copyright (c) 2013 Zhussupov Zhassulan zhzhussupovkz@gmail.com
+* @copyright (c) 2014 Zhussupov Zhassulan zhzhussupovkz@gmail.com
 */
 class PHPechkin {
 
@@ -21,7 +21,7 @@ class PHPechkin {
 	//constructor
 	public function __construct($username = null, $password = null) {
 		if (!$username || !$password)
-			return $this->getError('99');
+			return $this->getError('100');
 		$this->username = $username;
 		$this->password = $password;
 	}
