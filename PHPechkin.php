@@ -243,7 +243,6 @@ class PHPechkin {
 	public function lists_upload($list_id = null, $file = null, $email = null, $params = array()) {
 		if (is_null($list_id) || is_null($email) || is_null($file))
 			return $this->getError('3');
-		$email = $this->checkEmail($email);
 		if ($email !== false)
 			$required = array('list_id' => $list_id, 'file' => $file, 'email' => $email);
 		else
