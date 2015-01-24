@@ -422,7 +422,8 @@ class PHPechkin {
 		if (is_null($campaign_id))
 			return $this->getError('3');
 		$required = array('campaign_id' => $campaign_id);
-		$params['list_id'] = serialize($params['list_id']);
+		if (isset($params['list_id']))
+			$params['list_id'] = serialize($params['list_id']);
 		$params = array_merge($required, $params);
 		return $this->sendData('campaigns.update', $params);
 	}
@@ -512,7 +513,7 @@ class PHPechkin {
 		if (is_null($name) || is_null($template))
 			return $this->getError('3');
 		$params = array('name' => $name, 'template' => $template);
-		return $this->sendData('campaigns.add_templates', $params);
+		return $this->sendData('campaigns.add_template', $params);
 	}
 
 	//campaigns.delete_template - Удаляем html шаблон
